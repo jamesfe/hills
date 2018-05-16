@@ -4,35 +4,55 @@
  * */
 
 
-let minTime = 5; // minimum five seconds between each point
+let timeInterval = 15; // minimum five seconds between each point
 
 var tj = require('togeojson'),
     fs = require('fs'),
     // node doesn't have xml parsing or a dom. use xmldom
     DOMParser = require('xmldom').DOMParser;
 
-var gpx = new DOMParser().parseFromString(fs.readFileSync('./data/cold_fingers.gpx', 'utf8'));
+var gpx = new DOMParser().parseFromString(fs.readFileSync('./data/test_data.gpx', 'utf8'));
 
 var data = tj.gpx(gpx);
 
 var distance = 0;
 var time = 0
 
+function dateStringToEpochSeconds(inStr) {
+  return Math.floor(new Date(inStr).getTime() / 1000);
+}
+var thisTime = 0; // the time we are currently looking at
+var targetTime =  -1; // the time we are targeting (some seconds after our current time)
+var targetTime = dateStringToEpochSeconds(data.features[0].properties.coordTimes[0]) + timeInterval;
+var segments = new Array();
+var tempCoords = new Array();
+
+
 for (var i = 0; i < data.features[0].geometry.coordinates.length; i++) {
   /* Keep adding points and distance to our line until time difference is 5 seconds. */
-  if (time === 0) {
-    startTime = 
+  thisTime = dateStringToEpochSeconds(data.features[0].properties.coordTimes[i]);
+  if (thisTime < targetTime) {
+    tempCoords.push({
+      time: thisTime,
+      coord: data.features[0].geometry.coordinates[i]
+    });
   }
-  distance = 
-
+  if (thisTime >= targetTime) {
+    segments.push(tempCoords);
+    let firstCoord = tempCoords[tempCoords.length - 1];
+    tempCoords = new Array();
+    tempCoords.push(firstCoord); // this is the first point of the next segment.
+    targetTime += timeInterval;
+    // TODO: Mash the data: how long in km is each segment, what's the deal with the slope
+  }
 }
+/*
+console.log(segments);
+console.log(segments[0]);
+*/
 
 /*
-var blah = Array();
-.forEach( (x, i) => {
-  blah.push(i);
-});
-
-console.log('done');
-console.log(blah);
-*/
+ * Some code here to turn each segment into a geoJSON feature or something
+ * calculate the length of each segment
+ * calculate the slope
+ */

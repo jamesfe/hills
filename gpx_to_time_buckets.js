@@ -12,71 +12,66 @@ var tj = require('togeojson'),
     // node doesn't have xml parsing or a dom. use xmldom
     DOMParser = require('xmldom').DOMParser;
 
-// let dFile = './data/test_data.gpx'
 let dFile = './data/four_countries_century.gpx'
 
-var gpx = new DOMParser().parseFromString(fs.readFileSync(dFile, 'utf8'));
 
-var data = tj.gpx(gpx);
+function rideToScatterPlotData(inputFile) {
+  var gpx = new DOMParser().parseFromString(fs.readFileSync(inputFile, 'utf8'));
 
-var distance = 0;
-var time = 0
+  var data = tj.gpx(gpx);
 
-function dateStringToEpochSeconds(inStr) {
-  return Math.floor(new Date(inStr).getTime() / 1000);
-}
-var thisTime = 0; // the time we are currently looking at
-var targetTime =  -1; // the time we are targeting (some seconds after our current time)
-var targetTime = dateStringToEpochSeconds(data.features[0].properties.coordTimes[0]) + timeInterval;
-var segments = new Array();
-var tempCoords = new Array();
+  var distance = 0;
+  var time = 0
 
-
-for (var i = 0; i < data.features[0].geometry.coordinates.length; i++) {
-  /* Keep adding points and distance to our line until time difference is 5 seconds. */
-  thisTime = dateStringToEpochSeconds(data.features[0].properties.coordTimes[i]);
-  if (thisTime < targetTime) {
-    tempCoords.push({
-      time: thisTime,
-      coord: data.features[0].geometry.coordinates[i]
-    });
+  function dateStringToEpochSeconds(inStr) {
+    return Math.floor(new Date(inStr).getTime() / 1000);
   }
-  if (thisTime >= targetTime) {
-    if (tempCoords.length > 1) {
-      let feature = turf.lineString(tempCoords.map(x => x.coord.slice(0, 2)));
-      let milesLength = turf.length(feature, {units: 'miles'});
-      let metersLength = turf.length(feature, {units: 'meters'});
-      // console.log('-----------new feature---------------');
-      // console.log(milesLength, metersLength);
-      var slopeSegs = tempCoords.slice(0, tempCoords.length - 1).map((x, i) => {
-        let tinyFeature = turf.lineString([x.coord.slice(0, 2), tempCoords[i + 1].coord.slice(0, 2)]);
-        let tinyLength = turf.length(tinyFeature, {units: 'meters'});
-        if (tinyLength === 0) {
-          tinyLength = 0.00001;
-        }
-        let percentage = tinyLength / metersLength;
-        let rise = x.coord[2] - tempCoords[i + 1].coord[2];
-        let slopePct = 100 * (rise / tinyLength);
-        // console.log(percentage, slopePct, x.coord[1] + "," + x.coord[0], x.coord[2], tempCoords[i + 1].coord[2], 'run', tinyLength);
-        return (percentage * slopePct);
+  var thisTime = 0; // the time we are currently looking at
+  var targetTime =  -1; // the time we are targeting (some seconds after our current time)
+  var targetTime = dateStringToEpochSeconds(data.features[0].properties.coordTimes[0]) + timeInterval;
+  var segments = new Array();
+  var tempCoords = new Array();
+
+
+  for (var i = 0; i < data.features[0].geometry.coordinates.length; i++) {
+    /* Keep adding points and distance to our line until time difference is 5 seconds. */
+    thisTime = dateStringToEpochSeconds(data.features[0].properties.coordTimes[i]);
+    if (thisTime < targetTime) {
+      tempCoords.push({
+        time: thisTime,
+        coord: data.features[0].geometry.coordinates[i]
       });
-      let totalSlopePct = slopeSegs.reduce((x, a) => x + a, 0);
-      let speedMph = (3600 * milesLength) / (tempCoords[tempCoords.length - 1].time - tempCoords[0].time);
-      // console.log('mi: ', milesLength, 'm: ', metersLength, 'pct%: ', totalSlopePct, speedMph);
-      segments.push({mph: speedMph, slopePct: totalSlopePct});
-      // segments.push(tempCoords);
     }
-    let firstCoord = tempCoords[tempCoords.length - 1];
-    tempCoords = new Array();
-    tempCoords.push(firstCoord); // this is the first point of the next segment.
-    targetTime += timeInterval;
-    // TODO: Mash the data: how long in km is each segment, what's the deal with the slope
+    if (thisTime >= targetTime) {
+      if (tempCoords.length > 1) {
+        let feature = turf.lineString(tempCoords.map(x => x.coord.slice(0, 2)));
+        let milesLength = turf.length(feature, {units: 'miles'});
+        let metersLength = turf.length(feature, {units: 'meters'});
+        var slopeSegs = tempCoords.slice(0, tempCoords.length - 1).map((x, i) => {
+          let tinyFeature = turf.lineString([x.coord.slice(0, 2), tempCoords[i + 1].coord.slice(0, 2)]);
+          let tinyLength = turf.length(tinyFeature, {units: 'meters'});
+          if (tinyLength === 0) {
+            tinyLength = 0.00001;
+          }
+          let percentage = tinyLength / metersLength;
+          let rise = x.coord[2] - tempCoords[i + 1].coord[2];
+          let slopePct = 100 * (rise / tinyLength);
+          return (percentage * slopePct);
+        });
+        let totalSlopePct = slopeSegs.reduce((x, a) => x + a, 0);
+        let speedMph = (3600 * milesLength) / (tempCoords[tempCoords.length - 1].time - tempCoords[0].time);
+        segments.push({mph: speedMph, slopePct: totalSlopePct});
+      }
+      let firstCoord = tempCoords[tempCoords.length - 1];
+      tempCoords = new Array();
+      tempCoords.push(firstCoord); // this is the first point of the next segment.
+      targetTime += timeInterval;
+    }
   }
+  return (segments);
 }
-console.log("%j", segments);
 
-/*
- * Some code here to turn each segment into a geoJSON feature or something
- * calculate the length of each segment
- * calculate the slope
- */
+
+
+let segments = rideToScatterPlotData(dFile)
+console.log("%j", segments);

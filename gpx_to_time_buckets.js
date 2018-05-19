@@ -61,10 +61,10 @@ for (var i = 0; i < data.features[0].geometry.coordinates.length; i++) {
         return (percentage * slopePct);
       });
       let totalSlopePct = slopeSegs.reduce((x, a) => x + a, 0);
-      console.log('mi: ', milesLength, 'm: ', metersLength, 'pct%: ', totalSlopePct);
-
-
-      segments.push(tempCoords);
+      let speedMph = (3600 * milesLength) / (tempCoords[tempCoords.length - 1].time - tempCoords[0].time);
+      // console.log('mi: ', milesLength, 'm: ', metersLength, 'pct%: ', totalSlopePct, speedMph);
+      segments.push({mph: speedMph, slopePct: totalSlopePct});
+      // segments.push(tempCoords);
     }
     let firstCoord = tempCoords[tempCoords.length - 1];
     tempCoords = new Array();
@@ -73,12 +73,7 @@ for (var i = 0; i < data.features[0].geometry.coordinates.length; i++) {
     // TODO: Mash the data: how long in km is each segment, what's the deal with the slope
   }
 }
-console.log(segments.length);
-/*
-console.log(segments[0]);
-console.log(segments[1]);
-console.log(segments[2]);
-*/
+console.log("%j", segments);
 
 /*
  * Some code here to turn each segment into a geoJSON feature or something

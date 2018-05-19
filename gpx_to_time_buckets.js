@@ -4,14 +4,18 @@
  * */
 
 
-let timeInterval = 15; // minimum five seconds between each point
+let timeInterval = 60; // minimum five seconds between each point
 
+var turf = require('@turf/turf');
 var tj = require('togeojson'),
     fs = require('fs'),
     // node doesn't have xml parsing or a dom. use xmldom
     DOMParser = require('xmldom').DOMParser;
 
-var gpx = new DOMParser().parseFromString(fs.readFileSync('./data/test_data.gpx', 'utf8'));
+// let dFile = './data/test_data.gpx'
+let dFile = './data/four_countries_century.gpx'
+
+var gpx = new DOMParser().parseFromString(fs.readFileSync(dFile, 'utf8'));
 
 var data = tj.gpx(gpx);
 
@@ -38,7 +42,30 @@ for (var i = 0; i < data.features[0].geometry.coordinates.length; i++) {
     });
   }
   if (thisTime >= targetTime) {
-    segments.push(tempCoords);
+    if (tempCoords.length > 1) {
+      let feature = turf.lineString(tempCoords.map(x => x.coord.slice(0, 2)));
+      let milesLength = turf.length(feature, {units: 'miles'});
+      let metersLength = turf.length(feature, {units: 'meters'});
+      // console.log('-----------new feature---------------');
+      // console.log(milesLength, metersLength);
+      var slopeSegs = tempCoords.slice(0, tempCoords.length - 1).map((x, i) => {
+        let tinyFeature = turf.lineString([x.coord.slice(0, 2), tempCoords[i + 1].coord.slice(0, 2)]);
+        let tinyLength = turf.length(tinyFeature, {units: 'meters'});
+        if (tinyLength === 0) {
+          tinyLength = 0.00001;
+        }
+        let percentage = tinyLength / metersLength;
+        let rise = x.coord[2] - tempCoords[i + 1].coord[2];
+        let slopePct = 100 * (rise / tinyLength);
+        // console.log(percentage, slopePct, x.coord[1] + "," + x.coord[0], x.coord[2], tempCoords[i + 1].coord[2], 'run', tinyLength);
+        return (percentage * slopePct);
+      });
+      let totalSlopePct = slopeSegs.reduce((x, a) => x + a, 0);
+      console.log('mi: ', milesLength, 'm: ', metersLength, 'pct%: ', totalSlopePct);
+
+
+      segments.push(tempCoords);
+    }
     let firstCoord = tempCoords[tempCoords.length - 1];
     tempCoords = new Array();
     tempCoords.push(firstCoord); // this is the first point of the next segment.
@@ -46,9 +73,11 @@ for (var i = 0; i < data.features[0].geometry.coordinates.length; i++) {
     // TODO: Mash the data: how long in km is each segment, what's the deal with the slope
   }
 }
+console.log(segments.length);
 /*
-console.log(segments);
 console.log(segments[0]);
+console.log(segments[1]);
+console.log(segments[2]);
 */
 
 /*

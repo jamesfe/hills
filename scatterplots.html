@@ -35,12 +35,13 @@ var svg = d3.select("body").append("svg")
           "translate(" + margin.left + "," + margin.top + ")");
 
 // Get the data
-d3.json("./processed_data/four_countries.json", function(error, data) {
+d3.json("./processed_data/four_country_century_15seconds.json", function(error, data) {
   if (error) throw error;
 
   // Scale the range of the data
   x.domain(d3.extent(data, function(d) { return d.mph; }));
-  y.domain(d3.extent(data, function(d) { return d.slopePct; }));
+  y.domain([-30, 30]);
+  // y.domain(d3.extent(data, function(d) { return d.slopePct; }));
 
   // Add the scatterplot
   svg.selectAll("dot")

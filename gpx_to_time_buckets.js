@@ -16,7 +16,7 @@ function dateStringToEpochSeconds(inStr) {
 }
 
 
-function rideToScatterPlotData(inputFile, timeInterval) {
+function rideToScatterPlotData(inputFile, timeInterval, label) {
   var gpx = new DOMParser().parseFromString(fs.readFileSync(inputFile, 'utf8'));
   var data = tj.gpx(gpx);
 
@@ -52,7 +52,7 @@ function rideToScatterPlotData(inputFile, timeInterval) {
         });
         let totalSlopePct = slopeSegs.reduce((x, a) => x + a, 0);
         let speedMph = (3600 * milesLength) / (tempCoords[tempCoords.length - 1].time - tempCoords[0].time);
-        segments.push({mph: speedMph, slopePct: totalSlopePct});
+        segments.push({mph: speedMph, slopePct: totalSlopePct, l: label});
       }
       let firstCoord = tempCoords[tempCoords.length - 1];
       tempCoords = new Array();
@@ -65,9 +65,10 @@ function rideToScatterPlotData(inputFile, timeInterval) {
 
 let dFile = process.argv[2];
 let seconds = parseInt(process.argv[3]);
+let label = process.argv[4];
 if (seconds === undefined) {
   seconds = 60;
 }
 
-let segs = rideToScatterPlotData(dFile, seconds);
+let segs = rideToScatterPlotData(dFile, seconds, label);
 console.log("%j", segs);

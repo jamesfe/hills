@@ -4,7 +4,6 @@
  * */
 
 
-let timeInterval = 60; // minimum five seconds between each point
 
 var turf = require('@turf/turf');
 var tj = require('togeojson'),
@@ -12,29 +11,22 @@ var tj = require('togeojson'),
     // node doesn't have xml parsing or a dom. use xmldom
     DOMParser = require('xmldom').DOMParser;
 
-let dFile = './data/four_countries_century.gpx'
+function dateStringToEpochSeconds(inStr) {
+  return Math.floor(new Date(inStr).getTime() / 1000);
+}
 
 
-function rideToScatterPlotData(inputFile) {
+function rideToScatterPlotData(inputFile, timeInterval) {
   var gpx = new DOMParser().parseFromString(fs.readFileSync(inputFile, 'utf8'));
-
   var data = tj.gpx(gpx);
 
-  var distance = 0;
-  var time = 0
-
-  function dateStringToEpochSeconds(inStr) {
-    return Math.floor(new Date(inStr).getTime() / 1000);
-  }
   var thisTime = 0; // the time we are currently looking at
   var targetTime =  -1; // the time we are targeting (some seconds after our current time)
   var targetTime = dateStringToEpochSeconds(data.features[0].properties.coordTimes[0]) + timeInterval;
   var segments = new Array();
   var tempCoords = new Array();
 
-
   for (var i = 0; i < data.features[0].geometry.coordinates.length; i++) {
-    /* Keep adding points and distance to our line until time difference is 5 seconds. */
     thisTime = dateStringToEpochSeconds(data.features[0].properties.coordTimes[i]);
     if (thisTime < targetTime) {
       tempCoords.push({
@@ -71,7 +63,11 @@ function rideToScatterPlotData(inputFile) {
   return (segments);
 }
 
+let dFile = process.argv[2];
+let seconds = parseInt(process.argv[3]);
+if (seconds === undefined) {
+  seconds = 60;
+}
 
-
-let segments = rideToScatterPlotData(dFile)
-console.log("%j", segments);
+let segs = rideToScatterPlotData(dFile, seconds);
+console.log("%j", segs);

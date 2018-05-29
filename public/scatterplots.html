@@ -7,6 +7,11 @@
   stroke-width: 1;
   stroke-dasharray: 10,10;
 }
+.labeltext {
+  font-family: Helvetica;
+  color: black;
+  font-size: 14px;
+}
 </style>
 <body>
 
@@ -43,8 +48,8 @@ d3.json("./processed_data/morning_ride_15.json", function(error, data) {
 
   // Scale the range of the data
   x.domain(d3.extent(data, function(d) { return d.mph; }));
-  y.domain([-30, 30]);
-  // y.domain(d3.extent(data, function(d) { return d.slopePct; }));
+  // y.domain([-30, 30]);
+  y.domain(d3.extent(data, function(d) { return d.slopePct; }));
 
   // Add the scatterplot
   svg.selectAll("dot")
@@ -66,10 +71,27 @@ d3.json("./processed_data/morning_ride_15.json", function(error, data) {
   svg.append("g")
       .attr("transform", "translate(0," + height + ")")
       .call(d3.axisBottom(x));
+  // text label for the x axis
+  svg.append("text")
+      .attr("transform",
+            "translate(" + (width/2) + " ," +
+                           (height + margin.top + 8) + ")")
+      .style("text-anchor", "middle")
+      .text("Speed (Miles Per Hour)")
+      .attr("class", "labeltext");
 
   // Add the Y Axis
   svg.append("g")
       .call(d3.axisLeft(y));
+  // text label for the y axis
+  svg.append("text")
+      .attr("transform", "rotate(-90)")
+      .attr("y", 0 - margin.left)
+      .attr("x",0 - (height / 2))
+      .attr("dy", "1em")
+      .style("text-anchor", "middle")
+      .text("Slope (Percent)")
+      .attr("class", "labeltext");
 
 });
 

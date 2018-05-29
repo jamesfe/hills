@@ -1,5 +1,13 @@
 <!DOCTYPE html>
 <meta charset="utf-8">
+<style>
+.zeroline {
+  fill: none;
+  stroke: gray;
+  stroke-width: 1;
+  stroke-dasharray: 10,10;
+}
+</style>
 <body>
 
 <!-- load the d3.js library -->
@@ -30,7 +38,7 @@ var svg = d3.select("body").append("svg")
           "translate(" + margin.left + "," + margin.top + ")");
 
 // Get the data
-d3.json("./processed_data/four_country_century_15seconds.json", function(error, data) {
+d3.json("./processed_data/morning_ride_15.json", function(error, data) {
   if (error) throw error;
 
   // Scale the range of the data
@@ -42,9 +50,17 @@ d3.json("./processed_data/four_country_century_15seconds.json", function(error, 
   svg.selectAll("dot")
       .data(data)
     .enter().append("circle")
-      .attr("r", 3)
+      .attr("r", 2)
       .attr("cx", function(d) { return x(d.mph); })
       .attr("cy", function(d) { return y(d.slopePct); });
+
+  svg.append("line")
+    .attr("class", "zeroline")
+    .attr("x1", 0)
+    .attr("y1", y(0))
+    .attr("x2", width)
+    .attr("y2", y(0))
+    .attr("shape-rendering", "crispEdges");
 
   // Add the X Axis
   svg.append("g")

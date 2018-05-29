@@ -1,9 +1,12 @@
 /*
+ * Usage:
+ * node gpx_to_time_buckets.js [input gpx file] [seconds per bucket] [label for this file] [output filename]
+ * */
+
+/*
  * We read the GPX file and bucket it by time.  For each set of times, we can get a speed in meters/sec and convert that to whatever
  * Between each set of times we can also do a delta on the altitude difference, convert that to whatever we want.
  * */
-
-
 
 var turf = require('@turf/turf');
 var tj = require('togeojson'),
@@ -63,12 +66,22 @@ function rideToScatterPlotData(inputFile, timeInterval, label) {
   return (segments);
 }
 
+
 let dFile = process.argv[2];
 let seconds = parseInt(process.argv[3]);
 let label = process.argv[4];
 if (seconds === undefined) {
   seconds = 60;
 }
+let outputFileName = process.argv[5];
 
 let segs = rideToScatterPlotData(dFile, seconds, label);
-console.log("%j", segs);
+
+fs.writeFile(outputFileName, JSON.stringify(segs), function(err) {
+    if(err) {
+        return console.log(err);
+    }
+
+    console.log("The file was saved!");
+});
+// console.log("%j", segs);

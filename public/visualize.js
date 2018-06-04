@@ -10,10 +10,8 @@ function genScatterPlot(svg, inputFile) {
 
   d3.json(inputFile, function(error, data) {
     if (error) throw error;
-
     // Scale the range of the data
     x.domain(d3.extent(data, function(d) { return d.mph; }));
-    // y.domain([-30, 30]);
     y.domain(d3.extent(data, function(d) { return d.slopePct; }));
 
     // Add the scatterplot
@@ -57,9 +55,7 @@ function genScatterPlot(svg, inputFile) {
         .style("text-anchor", "middle")
         .text("Slope (Percent)")
         .attr("class", "labeltext");
-
   });
-
 }
 
 // set the dimensions and margins of the graph

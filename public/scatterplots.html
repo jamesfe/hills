@@ -12,10 +12,21 @@
   color: black;
   font-size: 14px;
 }
+.titletext {
+  font-family: Helvetica;
+  color: black;
+  font-size: 22;
+}
 </style>
 <body>
 
 <!-- load the d3.js library -->
 <script src="https://d3js.org/d3.v4.min.js"></script>
 <script src="./visualize.js"></script>
+<script>
+genScatterPlot(addNewSvg(), "./processed_data/st1_15sec.json", "St Malo Day 1");
+genScatterPlot(addNewSvg(), "./processed_data/st2_15sec.json", "St Malo Day 2");
+genScatterPlot(addNewSvg(), "./processed_data/st3_15sec.json", "St Malo Day 3");
+genScatterPlot(addNewSvg(), "./processed_data/st4_15sec.json", "St Malo Day 4");
+</script>
 </body>

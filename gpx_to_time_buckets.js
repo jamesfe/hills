@@ -84,4 +84,3 @@ fs.writeFile(outputFileName, JSON.stringify(segs), function(err) {
 
     console.log("The file was saved!");
 });
-// console.log("%j", segs);

@@ -3,7 +3,7 @@
  * */
 
 
-function genScatterPlot(svg, inputFile) {
+function genScatterPlot(svg, inputFile, title, extX, extY) {
   // set the ranges
   var x = d3.scaleLinear().range([0, width]); // miles per hr
   var y = d3.scaleLinear().range([height, 0]); // slope
@@ -11,9 +11,17 @@ function genScatterPlot(svg, inputFile) {
   d3.json(inputFile, function(error, data) {
     if (error) throw error;
     // Scale the range of the data
-    x.domain(d3.extent(data, function(d) { return d.mph; }));
-    extents = d3.extent(data, function(d) { return d.slopePct; });
-    y.domain([Math.max(extents[0], -30), Math.min(extents[1], 30)]);
+    if (extX === undefined) {
+      x.domain([0, 37]);
+    } else {
+      x.domain(d3.extent(data, function(d) { return d.mph; }));
+    }
+    if (extY === undefined) {
+      y.domain([-9, 9]);
+    } else {
+      extents = d3.extent(data, function(d) { return d.slopePct; });
+      y.domain([Math.max(extents[0], -30), Math.min(extents[1], 30)]);
+    }
 
     // Add the scatterplot
     svg.selectAll("dot")
@@ -56,6 +64,12 @@ function genScatterPlot(svg, inputFile) {
         .style("text-anchor", "middle")
         .text("Slope (Percent)")
         .attr("class", "labeltext");
+    svg.append("text")
+        .attr("y", (margin.left / 2))
+        .attr("x", margin.right + 50)
+        .style("text-anchor", "middle")
+        .attr("class", "titletext")
+        .text(title);
   });
 }
 
@@ -63,13 +77,13 @@ function genScatterPlot(svg, inputFile) {
 var margin = {top: 20, right: 20, bottom: 30, left: 50},
     width = 960 - margin.left - margin.right,
     height = 500 - margin.top - margin.bottom;
-
-var output = d3.select("body").append("svg")
-    .attr("width", width + margin.left + margin.right)
-    .attr("height", height + margin.top + margin.bottom)
-  .append("g")
-    .attr("transform",
-          "translate(" + margin.left + "," + margin.top + ")");
+function addNewSvg() {
+  return (d3.select("body").append("svg")
+      .attr("width", width + margin.left + margin.right)
+      .attr("height", height + margin.top + margin.bottom)
+    .append("g")
+      .attr("transform",
+            "translate(" + margin.left + "," + margin.top + ")"));
+}
 
 // Get the data
-genScatterPlot(output, "./processed_data/morning_ride_15.json");

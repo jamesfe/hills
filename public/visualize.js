@@ -2,11 +2,18 @@
  * Create a scatterplot based on a datafile.
  * */
 
+function round(n, digits) {
+  return (Math.round(n * (10 ** digits)) / (10 ** digits));
+}
 
 function genScatterPlot(svg, inputFile, title, extX, extY) {
   // set the ranges
   var x = d3.scaleLinear().range([0, width]); // miles per hr
   var y = d3.scaleLinear().range([height, 0]); // slope
+
+  var div = d3.select("body").append("div")
+                .attr("class", "tooltip")
+                .style("opacity", "0");
 
   d3.json(inputFile, function(error, data) {
     if (error) throw error;
@@ -29,7 +36,18 @@ function genScatterPlot(svg, inputFile, title, extX, extY) {
       .enter().append("circle")
         .attr("r", 2)
         .attr("cx", function(d) { return x(d.mph); })
-        .attr("cy", function(d) { return y(d.slopePct); });
+        .attr("cy", function(d) { return y(d.slopePct); })
+        .on("mouseover", function(d) {
+          div.transition()
+            .style("opacity", 0.9);
+          div.html(round(d.mph, 2) + "mph <br />" + round(d.slopePct, 2) + "%")
+            .style("left", (d3.event.pageX) + "px")
+            .style("top", (d3.event.pageY - 30) + "px");
+        })
+        .on("mouseout", function(d) {
+          div.transition()
+            .style("opacity", "0.0");
+        });
 
     svg.append("line")
       .attr("class", "zeroline")
@@ -51,6 +69,20 @@ function genScatterPlot(svg, inputFile, title, extX, extY) {
         .style("text-anchor", "middle")
         .text("Speed (Miles Per Hour)")
         .attr("class", "labeltext");
+
+    function xGridLine() {
+      return d3.axisBottom(x)
+        .ticks(8);
+    }
+
+    svg.append("g")
+      .attr("transform", "translate(0, " + height + ")")
+      .attr("class", "xgrid")
+      .call(xGridLine()
+        .tickSize(-1 * height)
+        .tickFormat("")
+      );
+
 
     // Add the Y Axis
     svg.append("g")
